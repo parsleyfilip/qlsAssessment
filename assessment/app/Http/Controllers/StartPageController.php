@@ -7,6 +7,7 @@ class StartPageController extends Controller
     public function showOrderForm()
     {
         // array met de data van de order die al gemaakt is (thx)
+        // maakt het makkelijker voor het testen enzo
         $order = [
             'number' => '#958201',
             'billing_address' => [

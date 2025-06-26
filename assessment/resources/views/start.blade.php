@@ -2,12 +2,46 @@
 
 @section('content')
 
-<!-- deze pagina is wel gewoon gemaakt met AI man ik ben niet zo goed in frontend -->
+<!-- formulier is wel gewoon gemaakt met AI man ik ben niet zo goed in tailwind frontend, probeerde het zelf te maken en ohmydays was het ugly -->
 
+<!-- bij eindresultaat ga ik wel een eigen formulier maken -->
+
+
+@if(session('success'))
+    <div class="bg-green-100 text-green-800 p-4 rounded mb-4">
+        {{ session('success') }}
+        @php
+            // Try to extract the shipmentId from the label_pdf_url if present
+            $shipmentId = null;
+            if (session('label_pdf_url')) {
+                // Example: .../shipments/{shipmentId}/labels/pdf
+                if (preg_match('/shipments\/([\w-]+)\/labels\/pdf/', session('label_pdf_url'), $matches)) {
+                    $shipmentId = $matches[1];
+                }
+            }
+        @endphp
+        @if($shipmentId)
+            <a href="{{ url('/download-label/' . $shipmentId) }}" class="underline text-green-600 ml-2" target="_blank">Download label (PDF) via backend</a>
+        @endif
+    </div>
+    <script>console.log('Label succesvol aangemaakt!');</script>
+@endif
+@if(session('error'))
+    <div class="bg-red-100 text-red-800 p-4 rounded mb-4">
+        {{ session('error') }}
+        @if(session('api_error'))
+            <pre class="text-xs mt-2">{{ session('api_error') }}</pre>
+        @endif
+    </div>
+    <script>console.error('Label aanmaken mislukt!');</script>
+@endif
+@if(session('label_pdf_url'))
+    <script>console.log('Label ophalen gelukt: {{ session('label_pdf_url') }}');</script>
+@endif
 
 <div class="max-w-4xl mx-auto bg-white p-8 shadow-md rounded-lg mt-10">
     <h2 class="text-2xl font-semibold mb-6">Order Details</h2>
-    <form action="/submit-order" method="POST" x-data="{ tab: 'billing' }">
+    <form action="/create-label" method="POST" x-data="{ tab: 'billing' }">
         @csrf
         <!-- tabbladen -->
         <div class="mb-6 border-b border-gray-200">
@@ -38,6 +72,16 @@
                     'email' => 'Email',
                     'phone' => 'Phone Number'
                 ];
+                $deliveryFields = [
+                    'name' => 'Full Name',
+                    'companyname' => 'Company Name (if any)',
+                    'street' => 'Street',
+                    'housenumber' => 'House Number',
+                    'address_line_2' => 'Address Line 2 (if any)',
+                    'zipcode' => 'Zip Code',
+                    'city' => 'City',
+                    'country' => 'Country',
+                ];
             @endphp
             @foreach ($fields as $key => $label)
                 <div class="mb-4">
@@ -49,7 +93,7 @@
         <!-- Delivery Address Tab -->
         <div x-show="tab === 'delivery'">
             <h3 class="text-xl font-semibold mb-4">Delivery Address</h3>
-            @foreach ($fields as $key => $label)
+            @foreach ($deliveryFields as $key => $label)
                 <div class="mb-4">
                     <label for="delivery_{{ $key }}" class="block text-sm font-medium text-gray-700">{{ $label }}</label>
                     <input type="text" id="delivery_{{ $key }}" name="order[delivery_address][{{ $key }}]" value="{{ old('order.delivery_address.' . $key, $order['delivery_address'][$key] ?? '') }}" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" @if($key != 'companyname' && $key != 'address_line_2') required @endif>
